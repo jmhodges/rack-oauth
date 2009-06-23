@@ -21,7 +21,7 @@ module Rack #:nodoc:
       :json_parser   => lambda {|json_string| require 'json'; JSON.parse(json_string); }
     }
 
-    # [internatl] the URL that should initiate OAuth and redirect to the OAuth provider's login page
+    # [internal] the URL that should initiate OAuth and redirect to the OAuth provider's login page
     attr_accessor :login_path
     alias login  login_path
     alias login= login_path=
