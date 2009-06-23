@@ -23,12 +23,18 @@ module Rack #:nodoc:
 
     # [internatl] the URL that should initiate OAuth and redirect to the OAuth provider's login page
     attr_accessor :login_path
+    alias login  login_path
+    alias login= login_path=
 
     # [internal] the URL that the OAuth provider should callback to after OAuth login is complete
     attr_accessor :callback_path
+    alias callback  callback_path
+    alias callback= callback_path=
 
     # [external] the URL that Rack::OAuth should redirect to after the OAuth has been completed (part of your app)
     attr_accessor :redirect_to
+    alias redirect  redirect_to
+    alias redirect= redirect_to=
 
     # the name of the Session key to use to store user account information (if OAuth completed OK)
     attr_accessor :session_key
@@ -38,42 +44,47 @@ module Rack #:nodoc:
 
     # [required] Your OAuth consumer key
     attr_accessor :consumer_key
+    alias key  consumer_key
+    alias key= consumer_key=
 
     # [required] Your OAuth consumer secret
     attr_accessor :consumer_secret
+    alias secret  consumer_secret
+    alias secret= consumer_secret=
 
     # [required] The site you want to request OAuth for, eg. 'http://twitter.com'
     attr_accessor :consumer_site
+    alias site  consumer_site
+    alias site= consumer_site=
 
     # a Proc that accepts a JSON string and returns a Ruby object.  Defaults to using the 'json' gem, if available.
     attr_accessor :json_parser
 
-    def initialize app, options
-      @app     = app
+    def initialize app, options = {}
+      @app = app
       
-      DEFAULT_OPTIONS.merge(options || {}).each do |name, value|
-        instance_variable_set "@#{name}", value
-      end
+      DEFAULT_OPTIONS.each {|name, value| send "#{name}=", value }
+      options.each         {|name, value| send "#{name}=", value } if options
 
       raise_validation_exception unless valid?
     end
 
     def call env
       case env['PATH_INFO']
-      when login_path;    login     env
-      when callback_path; callback  env
-      else;               @app.call env
+      when login_path;      do_login     env
+      when callback_path;   do_callback  env
+      else;                 @app.call    env
       end
     end
 
-    def login env
+    def do_login env
       request = consumer.get_request_token :oauth_callback => ::File.join("http://#{ env['HTTP_HOST'] }", callback_path)
       session(env)[:oauth_request_token]  = request.token
       session(env)[:oauth_request_secret] = request.secret
       [ 302, {'Location' => request.authorize_url}, [] ]
     end
 
-    def callback env
+    def do_callback env
       request  = ::OAuth::RequestToken.new consumer, session(env)[:oauth_request_token], session(env)[:oauth_request_secret]
       access   = request.get_access_token :oauth_verifier => Rack::Request.new(env).params['oauth_verifier']
       response = consumer.request :get, '/account/verify_credentials.json', access, :scheme => :query_string
