@@ -1,0 +1,11 @@
+= Rack::OAuth
+
+Rack::OAuth is a Rack middleware for easily integration OAuth into your web applications.
+
+== Installation
+
+... coming soon ...
+
+== Usage
+
+... coming soon ...
