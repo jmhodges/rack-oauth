@@ -36,6 +36,8 @@ There are a number of defaults that can be overridden.  Defaults can be viewed a
                   :rack_session => 'name_of_rack_session_variable',
                   :json_parser  => lambda {|json_string| return SomeParser.parse(json_string) }
 
-*NOTE:* Rack::OAuth was created to work with Twitter OAuth and has, thus far, only been tested using Twitter's OAuth.  If this doesn't work for you for a different OAuth provider, please let me know!  Or, if you patch Rack::OAuth to support another provider, please send me a pull request with the patch.
+=== Notes
 
-*TESTING:* So ... where are the specs?  I know, I always test-drive my code ... for some reason, I have yet to test this piece of middleware.  I might add tests later.  My bad!
+Rack::OAuth was created to work with Twitter OAuth and has, thus far, only been tested using Twitter's OAuth.  If this doesn't work for you for a different OAuth provider, please let me know!  Or, if you patch Rack::OAuth to support another provider, please send me a pull request with the patch.
+
+Also, I haven't added any specs yet.  My bad.
