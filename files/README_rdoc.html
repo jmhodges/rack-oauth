@@ -56,7 +56,7 @@
     </tr>
     <tr class="top-aligned-row">
       <td><strong>Last Update:</strong></td>
-      <td>Tue Jun 23 16:19:40 -0700 2009</td>
+      <td>Tue Jun 23 18:49:12 -0700 2009</td>
     </tr>
     </table>
   </div>
@@ -75,13 +75,61 @@
 for easily integration OAuth into your web applications.
 </p>
 <h2>Installation</h2>
+<pre>
+  $ gem sources -a http://gems.github.com
+  $ sudo gem install remi-rack-oauth
+</pre>
 <p>
-&#8230; coming soon &#8230;
+<a href="../classes/Rack/OAuth.html">Rack::OAuth</a> requires the rack and
+oauth gems (and json, although this can be overriden)
 </p>
+<pre>
+  $ sudo gem install rack oauth json
+</pre>
 <h2>Usage</h2>
 <p>
-&#8230; coming soon &#8230;
+To quickly see how to use this, you might want to check out the screencast
+at <a href="http://remi.org">remi.org</a>
 </p>
+<p>
+You can also view the RDoc at <a
+href="http://code.remi.org/rack-oauth">code.remi.org/rack-oauth</a>
+</p>
+<pre>
+  use Rack::OAuth :key =&gt; 'abc', :secret =&gt; '123', :site =&gt; 'http://twitter.com'
+</pre>
+<p>
+This will use all of the defaults:
+</p>
+<ul>
+<li>visiting <tt>/oauth_login</tt> will setup an OAuth request and redirect the
+user to login to the OAuth provider
+
+</li>
+<li><tt>/oauth_complete</tt> is where we redirect to after OAuth authorization
+is complete
+
+</li>
+<li><tt>session[:oauth_user]</tt> will return a hash with the OAuth account
+information (if a user was authorized)
+
+</li>
+</ul>
+<p>
+There are a number of defaults that can be overridden. Defaults can be
+viewed at <a
+href="http://code.remi.org/rack-oauth/classes/Rack/OAuth.html">code.remi.org/rack-oauth/classes/Rack/OAuth.html</a>
+</p>
+<pre>
+  use Rack::OAuth :key          =&gt; 'abc',
+                  :secret       =&gt; '123',
+                  :site         =&gt; 'http://twitter.com',
+                  :login        =&gt; '/path_that_will_goto_oauth_providers_login',
+                  :redirect     =&gt; '/path_to_redirect_to_after_oauth_authorization',
+                  :session_key  =&gt; 'name_of_session_variable_to_store_oauth_user_info_in',
+                  :rack_session =&gt; 'name_of_rack_session_variable',
+                  :json_parser  =&gt; lambda {|json_string| return SomeParser.parse(json_string) }
+</pre>
 
     </div>
 
