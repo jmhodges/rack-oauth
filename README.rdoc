@@ -15,7 +15,7 @@ Rack::OAuth requires the rack and oauth gems (and json, although this can be ove
 
 To quickly see how to use this, you might want to check out the screencast at http://remi.org
 
-You can also view the RDoc at http://code.remi.org/rack-oath
+You can also view the RDoc at http://code.remi.org/rack-oauth
 
   use Rack::OAuth :key => 'abc', :secret => '123', :site => 'http://twitter.com'
 
