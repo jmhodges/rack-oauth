@@ -56,7 +56,7 @@
     </tr>
     <tr class="top-aligned-row">
       <td><strong>Last Update:</strong></td>
-      <td>Tue Jun 23 18:52:12 -0700 2009</td>
+      <td>Tue Jun 23 18:54:29 -0700 2009</td>
     </tr>
     </table>
   </div>
@@ -130,18 +130,17 @@ href="http://code.remi.org/rack-oauth/classes/Rack/OAuth.html">code.remi.org/rac
                   :rack_session =&gt; 'name_of_rack_session_variable',
                   :json_parser  =&gt; lambda {|json_string| return SomeParser.parse(json_string) }
 </pre>
+<h3>Notes</h3>
 <p>
-*NOTE:* <a href="../classes/Rack/OAuth.html">Rack::OAuth</a> was created to
-work with Twitter OAuth and has, thus far, only been tested using
+<a href="../classes/Rack/OAuth.html">Rack::OAuth</a> was created to work
+with Twitter OAuth and has, thus far, only been tested using
 Twitter&#8216;s OAuth. If this doesn&#8216;t work for you for a different
 OAuth provider, please let me know! Or, if you patch <a
 href="../classes/Rack/OAuth.html">Rack::OAuth</a> to support another
 provider, please send me a pull request with the patch.
 </p>
 <p>
-*TESTING:* So &#8230; where are the specs? I know, I always test-drive my
-code &#8230; for some reason, I have yet to test this piece of middleware.
-I might add tests later. My bad!
+Also, I haven&#8216;t added any specs yet. My bad.
 </p>
 
     </div>
