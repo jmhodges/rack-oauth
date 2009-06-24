@@ -2,8 +2,6 @@ require 'rubygems'
 require 'rack'
 require 'oauth'
 
-puts "HI!"
-
 module Rack #:nodoc:
 
   # Rack Middleware for integrating OAuth into your application
