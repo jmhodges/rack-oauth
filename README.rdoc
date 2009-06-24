@@ -1,6 +1,6 @@
 = Rack::OAuth
 
-Rack::OAuth is a Rack middleware for easily integration OAuth into your web applications.
+Rack::OAuth is a Rack middleware for easily integrating OAuth into your Ruby web applications.
 
 == Installation
 
