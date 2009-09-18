@@ -33,8 +33,8 @@ context 'Rack::OAuth' do
   context 'on login' do
     specify 'redirects the User to the Service Provider’s User Authorization URL' do
       res = Rack::MockRequest.new(app).get('/oauth_login')
-      res.should.be.a.redirect
-      res['Location'].should.equal('http://term.ie/oauth/authorize?oauth_token=requestkey')
+      res.should.redirect
+      res.location.should.equal('http://term.ie/oauth/authorize?oauth_token=requestkey')
       res.should.not.be.ok
     end
 
