@@ -55,6 +55,18 @@ module Rack #:nodoc:
     alias site  consumer_site
     alias site= consumer_site=
 
+    # The path OAuth should use to get a request token from the OAuth
+    # provider. OAuth will default to +/oauth/request_token+ without it.
+    attr_accessor :request_token_path
+
+    # The path OAuth should use to get a access token from the OAuth
+    # provider. OAuth will default to +/oauth/access_token+ without it.
+    attr_accessor :access_token_path
+
+    # The path OAuth should use for the User Authorization URL. OAuth
+    # will default to +/oauth/authorize+ without it.
+    attr_accessor :authorize_path
+
     # a Proc that accepts a JSON string and returns a Ruby object.  Defaults to using the 'json' gem, if available.
     attr_accessor :json_parser
 
@@ -76,14 +88,20 @@ module Rack #:nodoc:
     end
 
     def do_login env
-      # FIXME File.join will return a backslash on windows machines
-      request = consumer.get_request_token :oauth_callback => ::File.join("http://#{ env['HTTP_HOST'] }", callback_path)
+      host_name = env['HTTP_HOST'] || env['SERVER_NAME']
+      request = consumer.get_request_token(:oauth_callback =>
+                                           URI.join("http://#{host_name}", callback_path).to_s)
+      unless request.token && request.secret
+        return consumer_key_or_secret_error
+      end
+
       session(env)[:oauth_request_token]  = request.token
       session(env)[:oauth_request_secret] = request.secret
+
       # FIXME should the Content-type header should be checked against what
       # the client is Accept'ing and use something along those
       # lines in case of stringent clients?
-      [ 302, {'Location' => request.authorize_url, 'Content-type' => 'text/plain'}, [] ]
+      authorize_redirect(request)
     end
 
     def do_callback env
@@ -104,7 +122,9 @@ module Rack #:nodoc:
     protected
 
     def consumer
-      @consumer ||= ::OAuth::Consumer.new consumer_key, consumer_secret, :site => consumer_site
+      options = {:site => consumer_site}
+      options[:request_token_path] = request_token_path if request_token_path
+      @consumer ||= ::OAuth::Consumer.new consumer_key, consumer_secret, options
     end
 
     def valid?
@@ -125,6 +145,16 @@ module Rack #:nodoc:
       env[rack_session]
     end
 
+    private
+
+    def consumer_key_or_secret_error
+      msg = "Whoa, OAuth was given the wrong consumer key or secret"
+      [500, {'Content-type' => 'text/plain', 'Content-length' => msg.size.to_s}, msg]
+    end
+
+    def authorize_redirect(request)
+      [302, {'Location' => request.authorize_url, 'Content-type' => 'text/plain'}, []]
+    end
   end
 
   module Auth #:nodoc:
