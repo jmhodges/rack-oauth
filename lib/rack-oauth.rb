@@ -76,10 +76,14 @@ module Rack #:nodoc:
     end
 
     def do_login env
+      # FIXME File.join will return a backslash on windows machines
       request = consumer.get_request_token :oauth_callback => ::File.join("http://#{ env['HTTP_HOST'] }", callback_path)
       session(env)[:oauth_request_token]  = request.token
       session(env)[:oauth_request_secret] = request.secret
-      [ 302, {'Location' => request.authorize_url}, [] ]
+      # FIXME should the Content-type header should be checked against what
+      # the client is Accept'ing and use something along those
+      # lines in case of stringent clients?
+      [ 302, {'Location' => request.authorize_url, 'Content-type' => 'text/plain'}, [] ]
     end
 
     def do_callback env
