@@ -48,7 +48,7 @@ context 'Rack::OAuth' do
       res = Rack::MockRequest.new(
                                   app(:consumer_key => 'wrong')
                                   ).get('/oauth_login')
-      
+      res.status.should.equal 500
     end
   end
 end
