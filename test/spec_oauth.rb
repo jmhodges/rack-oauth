@@ -15,6 +15,11 @@ DEFAULT = {
   :authorize_path => "/oauth/example/authorize.php"
 }
 
+AUTHORIZE_SESSION = {
+  :oauth_request_token => 'nice',
+  :oauth_request_secret => 'yep'
+}
+
 def app(hsh={})
   inner_lint = Rack::Lint.new(lambda { |env|
                                 [200,
@@ -25,14 +30,15 @@ def app(hsh={})
                                 ]
                               })
   oauth = Rack::OAuth.new(inner_lint, DEFAULT.merge(hsh))
-  Rack::Session::Cookie.new(Rack::Lint.new(oauth))
+
+  Rack::Lint.new(oauth)
 end
 
 context 'Rack::OAuth' do
 
   context 'on login' do
     specify 'redirects the User to the Service Provider’s User Authorization URL' do
-      res = Rack::MockRequest.new(app).get('/oauth_login')
+      res = Rack::MockRequest.new(app).get('/oauth_login', 'rack.session' => {})
       res.should.redirect
       res.location.should.equal('http://term.ie/oauth/authorize?oauth_token=requestkey')
       res.should.not.be.ok
@@ -41,13 +47,13 @@ context 'Rack::OAuth' do
     specify 'throws 500 if the consumer key or secret is incorrect' do
       res = Rack::MockRequest.new(
                                   app(:consumer_secret => 'wrong')
-                                  ).get('/oauth_login')
+                                  ).get('/oauth_login', 'rack.session' => {})
                                   
       res.status.should.equal 500
 
       res = Rack::MockRequest.new(
                                   app(:consumer_key => 'wrong')
-                                  ).get('/oauth_login')
+                                  ).get('/oauth_login', 'rack.session' => {})
       res.status.should.equal 500
     end
   end
@@ -56,11 +62,32 @@ context 'Rack::OAuth' do
     # See http://oauth.net/core/1.0a and
     # http://wiki.oauth.net/Signed-Callback-URLs for info on
     # oauth_verifier and other security changes.
-    specify 'passes control to the app behind it'
-    specify 'requires an app to be behind it that can handle the callback path'
+    specify 'passes control to the app behind it' do
+      req = Rack::MockRequest.new(app)
+      res = req.get('/oauth_callback', 'rack.session' => AUTHORIZE_SESSION.dup)
+      res.body.should.equal('foo')
+      res.should.be.ok
+    end
+
     specify 'only deletes the access token, request token and request secret after the app behind it returns control'
-    specify 'returns a 4xx (FIXME DECIDE) if the access token is not successfuly gathered'
-    specify 'returns a 4xx (FIXME DECIDE) if the oauth_request_token or oauth_request_secret is missing'
+
+    specify 'returns a 401 if the access token is not successfully gathered'
+    
+    specify 'returns a 400 if the oauth_request_token or oauth_request_secret is missing' do
+
+      req = Rack::MockRequest.new(app)
+      res = req.get('/oauth_callback', 'rack.session' => {:oauth_request_secret => AUTHORIZE_SESSION[:oauth_request_secret]})
+
+      res.should.be.a.client_error
+      res.status.should.equal 400
+
+      req = Rack::MockRequest.new(app)
+      res = req.get('/oauth_callback', 'rack.session' => {:oauth_request_token => AUTHORIZE_SESSION[:oauth_request_token]})
+
+      res.should.be.a.client_error
+      res.status.should.equal 400
+    end
+
     specify 'requires the oauth_verifier of OAuth 1.0a as a parameter back from Service Provider'
     specify 'includes the oauth_verifier of OAuth 1.0a in the access token request'
     specify 'wtf oauth_callback_accepted seems to be useless'

@@ -105,18 +105,23 @@ module Rack #:nodoc:
     end
 
     def do_callback env
-      request  = ::OAuth::RequestToken.new consumer, session(env)[:oauth_request_token], session(env)[:oauth_request_secret]
-      access   = request.get_access_token :oauth_verifier => Rack::Request.new(env).params['oauth_verifier']
-      response = consumer.request :get, '/account/verify_credentials.json', access, :scheme => :query_string
+      sess = session(env)
 
-      # clean up session variables we used so we're not polluting the session
-      session(env).delete :oauth_request_token
-      session(env).delete :oauth_request_secret
+      unless sess[:oauth_request_token] && sess[:oauth_request_secret]
+        return missing_request_token_or_secret_error
+      end
+      # request  = ::OAuth::RequestToken.new consumer, session(env)[:oauth_request_token], session(env)[:oauth_request_secret]
+      # access   = request.get_access_token :oauth_verifier => Rack::Request.new(env).params['oauth_verifier']
+      # response = consumer.request :get, '/account/verify_credentials.json', access, :scheme => :query_string
 
-      # put the user information received (json -> ruby) in the session
-      session(env)[session_key] = json_parser.call response.body if response
+      # # clean up session variables we used so we're not polluting the session
+      # session(env).delete :oauth_request_token
+      # session(env).delete :oauth_request_secret
 
-      [ 302, {'Location' => redirect_to}, [] ]
+      # # put the user information received (json -> ruby) in the session
+      # session(env)[session_key] = json_parser.call response.body if response
+      
+      @app.call(env)
     end
 
     protected
@@ -149,11 +154,17 @@ module Rack #:nodoc:
 
     def consumer_key_or_secret_error
       msg = "Whoa, OAuth was given the wrong consumer key or secret"
-      [500, {'Content-type' => 'text/plain', 'Content-length' => msg.size.to_s}, msg]
+      [500, {'Content-type' => 'text/plain', 'Content-length' => msg.size.to_s}, [msg]]
     end
 
     def authorize_redirect(request)
       [302, {'Location' => request.authorize_url, 'Content-type' => 'text/plain'}, []]
+    end
+
+    def missing_request_token_or_secret_error
+      msg = "Whoa, the redirect (or link) that sent you here didn't specify " +
+        "either a oauth_request_token or oauth_request_secret"
+      [400, {'Content-type' => 'text/plain', 'Content-length' => msg.size.to_s}, [msg]]
     end
   end
 
