@@ -51,4 +51,15 @@ context 'Rack::OAuth' do
       res.status.should.equal 500
     end
   end
+
+  context 'on callback' do
+    specify 'passes control to the app behind it'
+    specify 'requires an app to be behind it that can handle the callback path'
+    specify 'only deletes the access token, request token and request secret after the app behind it returns control'
+    specify 'returns a 4xx (FIXME DECIDE) if the access token is not successfuly gathered'
+    specify 'returns a 4xx (FIXME DECIDE) if the oauth_request_token or oauth_request_secret is missing'
+    specify 'requires the oauth_verifier of OAuth 1.0a as a parameter back from Service Provider'
+    specify 'includes the oauth_verifier of OAuth 1.0a in the access token request'
+    specify 'wtf oauth_callback_accepted seems to be useless'
+  end
 end
