@@ -1,0 +1,3 @@
+git://github.com/rack/rack.git 1.0
+git://github.com/mojodna/oauth.git v0.3.6
+git://github.com/davetron5000/ruby-hmac.git v0.3.2
