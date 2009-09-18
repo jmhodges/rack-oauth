@@ -53,6 +53,9 @@ context 'Rack::OAuth' do
   end
 
   context 'on callback' do
+    # See http://oauth.net/core/1.0a and
+    # http://wiki.oauth.net/Signed-Callback-URLs for info on
+    # oauth_verifier and other security changes.
     specify 'passes control to the app behind it'
     specify 'requires an app to be behind it that can handle the callback path'
     specify 'only deletes the access token, request token and request secret after the app behind it returns control'
