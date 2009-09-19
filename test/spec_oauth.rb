@@ -63,8 +63,8 @@ context 'Rack::OAuth' do
     # http://wiki.oauth.net/Signed-Callback-URLs for info on
     # oauth_verifier and other security changes.
     specify 'passes control to the app behind it' do
-      req = Rack::MockRequest.new(app)
-      res = req.get('/oauth_callback', 'rack.session' => AUTHORIZE_SESSION.dup)
+      res = Rack::MockRequest.new(app).
+        get('/oauth_callback', 'rack.session' => AUTHORIZE_SESSION.dup)
       res.body.should.equal('foo')
       res.should.be.ok
     end
@@ -75,20 +75,27 @@ context 'Rack::OAuth' do
     
     specify 'returns a 400 if the oauth_request_token or oauth_request_secret is missing' do
 
-      req = Rack::MockRequest.new(app)
-      res = req.get('/oauth_callback', 'rack.session' => {:oauth_request_secret => AUTHORIZE_SESSION[:oauth_request_secret]})
+      res = Rack::MockRequest.new(app).
+        get('/oauth_callback',
+            'rack.session' => {
+              :oauth_request_secret => AUTHORIZE_SESSION[:oauth_request_secret]
+            })
 
       res.should.be.a.client_error
       res.status.should.equal 400
 
-      req = Rack::MockRequest.new(app)
-      res = req.get('/oauth_callback', 'rack.session' => {:oauth_request_token => AUTHORIZE_SESSION[:oauth_request_token]})
+      res = Rack::MockRequest.new(app).
+        get('/oauth_callback',
+            'rack.session' => {
+              :oauth_request_token => AUTHORIZE_SESSION[:oauth_request_token]
+            })
 
       res.should.be.a.client_error
       res.status.should.equal 400
     end
 
-    specify 'requires the oauth_verifier of OAuth 1.0a as a parameter back from Service Provider'
+    specify 'returns a 400 if the Service Provider did not append the OAuth 1.0a oauth_verifier param to the callback'
+
     specify 'includes the oauth_verifier of OAuth 1.0a in the access token request'
     specify 'wtf oauth_callback_accepted seems to be useless'
   end
