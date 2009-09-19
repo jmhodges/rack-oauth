@@ -157,6 +157,5 @@ context 'Rack::OAuth' do
       mock_access_token
       mock_callback
     end
-    specify 'wtf oauth_callback_accepted seems to be useless'
   end
 end
