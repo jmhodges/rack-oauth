@@ -96,9 +96,6 @@ context 'Rack::OAuth' do
         expects(:get_access_token).returns(token)
     end
 
-    # See http://oauth.net/core/1.0a and
-    # http://wiki.oauth.net/Signed-Callback-URLs for info on
-    # oauth_verifier and other security changes.
     specify 'passes control to the app behind it' do
       mock_access_token
       res = mock_callback
@@ -106,12 +103,12 @@ context 'Rack::OAuth' do
       res.should.be.ok
     end
 
-    specify 'only deletes the access token, request token and request secret after the app behind it returns control'
+    specify 'only deletes the access token and secret and request token and request secret after the app behind it returns control'
 
+    specify 'deletes the access and request tokens and secrets even after an error'
     specify 'returns a 401 if the access token is not successfully gathered'
 
     specify 'returns a 400 if the oauth_request_token or oauth_request_secret is missing' do
-
       res = mock_callback(:valid_request_secret => false)
 
       res.should.be.a.client_error
@@ -123,6 +120,9 @@ context 'Rack::OAuth' do
       res.status.should.equal 400
     end
 
+    # See http://oauth.net/core/1.0a and
+    # http://wiki.oauth.net/Signed-Callback-URLs for
+    # oauth_verifier and other security changes.
     specify 'returns a 400 if the Service Provider did not append the OAuth 1.0a oauth_verifier param to the callback' do
       res = mock_callback(:valid_verifier => false)
       res.should.be.a.client_error
