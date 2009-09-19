@@ -15,7 +15,6 @@ module Rack #:nodoc:
       :callback_path => '/oauth_callback',
       :redirect_to   => '/oauth_complete',
       :session_key   => 'oauth_user',
-      :json_parser   => lambda {|json_string| require 'json'; JSON.parse(json_string); }
     }
 
     # [internal] the URL that should initiate OAuth and redirect to the OAuth provider's login page
@@ -62,9 +61,6 @@ module Rack #:nodoc:
     # The path OAuth should use for the User Authorization URL. OAuth
     # will default to +/oauth/authorize+ without it.
     attr_accessor :authorize_path
-
-    # a Proc that accepts a JSON string and returns a Ruby object.  Defaults to using the 'json' gem, if available.
-    attr_accessor :json_parser
 
     def initialize app, options = {}
       @app = app
