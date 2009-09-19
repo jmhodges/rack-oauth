@@ -35,21 +35,27 @@ def app(hsh={})
 end
 
 def mock_callback(opts={})
-  opts = {:verifier => 'gotit',
-    :request_token => AUTHORIZE_SESSION[:oauth_request_token],
-    :request_secret => AUTHORIZE_SESSION[:oauth_request_secret]
+  opts = {:valid_verifier => true,
+    :valid_request_token => true,
+    :valid_request_secret => true
   }.merge(opts)
 
   verifier = ''
-  if opts[:verifier]
-    esc = Rack::Utils.escape(opts[:verifier])
-    verifier = "?oauth_verifier=#{esc}"
+  if opts[:valid_verifier]
+    v = Rack::Utils.escape(opts[:verifier]) || 'gotit'
+    verifier = "?oauth_verifier=#{v}"
+  end
+
+  sess = {}
+  if opts[:valid_request_token]
+    sess[:oauth_request_token] = AUTHORIZE_SESSION[:oauth_request_token]
+  end
+
+  if opts[:valid_request_secret]
+    sess[:oauth_request_secret] = AUTHORIZE_SESSION[:oauth_request_secret]
   end
 
   path = '/oauth_callback' + verifier
-  sess = {}
-  sess[:oauth_request_token] = opts[:request_token] if opts[:request_token]
-  sess[:oauth_request_secret] = opts[:request_secret] if opts[:request_secret]
   Rack::MockRequest.new(app).get(path, 'rack.session' => sess)
 end
 
@@ -57,7 +63,7 @@ context 'Rack::OAuth' do
 
   context 'on login' do
     specify 'redirects the User to the Service Provider’s User Authorization URL' do
-      res = Rack::MockRequest.new(app).get('/oauth_login', 'rack.session' => {})
+      res = mock_login
       res.should.redirect
       res.location.should.equal('http://term.ie/oauth/authorize?oauth_token=requestkey')
       res.should.not.be.ok
@@ -90,24 +96,25 @@ context 'Rack::OAuth' do
     specify 'only deletes the access token, request token and request secret after the app behind it returns control'
 
     specify 'returns a 401 if the access token is not successfully gathered'
-    
+
     specify 'returns a 400 if the oauth_request_token or oauth_request_secret is missing' do
 
-      res = mock_callback(:request_secret => nil)
+      res = mock_callback(:valid_request_secret => false)
 
       res.should.be.a.client_error
       res.status.should.equal 400
 
-      res = mock_callback(:request_token => nil)
+      res = mock_callback(:valid_request_token => false)
 
       res.should.be.a.client_error
       res.status.should.equal 400
     end
 
     specify 'returns a 400 if the Service Provider did not append the OAuth 1.0a oauth_verifier param to the callback' do
-      res = mock_callback(:verifier => nil)
+      res = mock_callback(:valid_verifier => false)
       res.should.be.a.client_error
       res.status.should.equal 400
+      res.match /verifier/
     end
 
     specify 'passes oauth_verifier to the the next app'
