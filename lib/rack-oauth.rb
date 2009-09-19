@@ -15,7 +15,6 @@ module Rack #:nodoc:
       :callback_path => '/oauth_callback',
       :redirect_to   => '/oauth_complete',
       :session_key   => 'oauth_user',
-      :rack_session  => 'rack.session',
       :json_parser   => lambda {|json_string| require 'json'; JSON.parse(json_string); }
     }
 
@@ -36,9 +35,6 @@ module Rack #:nodoc:
 
     # the name of the Session key to use to store user account information (if OAuth completed OK)
     attr_accessor :session_key
-
-    # the name of the Rack env variable used for the session
-    attr_accessor :rack_session
 
     # [required] Your OAuth consumer key
     attr_accessor :consumer_key
@@ -105,13 +101,14 @@ module Rack #:nodoc:
     end
 
     def do_callback env
-      sess = session(env)
+      request = Rack::Request.new(env)
+      sess = request.session
 
       unless sess[:oauth_request_token] && sess[:oauth_request_secret]
         return missing_request_token_or_secret_error
       end
 
-      oauth_verifier = Rack::Request.new(env).params['oauth_verifier']
+      oauth_verifier = request.params['oauth_verifier']
       
       unless oauth_verifier && !oauth_verifier.empty?
         return missing_oauth_verifier
@@ -127,8 +124,8 @@ module Rack #:nodoc:
         return incorrect_oauth_request_information
       end
 
-      sess[:access_token] = access.token
-      sess[:access_secret] = access.secret
+      env['rack.auth.oauth.access.token'] = access.token
+      env['rack.auth.oauth.access.secret'] = access.secret
       @app.call(env)
     end
 
@@ -153,9 +150,10 @@ module Rack #:nodoc:
     end
 
     def session env
-      raise "Rack env['rack.session'] is nil ... has a Rack::Session middleware be enabled?  " + 
-            "use :rack_session for custom key" if env[rack_session].nil?      
-      env[rack_session]
+      if env['rack.session'].nil?
+        raise "rack.session is nil and this is a FIXME. use rack.errors?"
+      end
+      env['rack.session']
     end
 
     private

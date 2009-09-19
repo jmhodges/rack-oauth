@@ -83,6 +83,8 @@ context 'Rack::OAuth' do
                                   ).get('/oauth_login', 'rack.session' => {})
       res.status.should.equal 500
     end
+
+    specify 'requires rack.session to be not nil'
   end
 
   context 'on callback' do
@@ -113,9 +115,6 @@ context 'Rack::OAuth' do
       res.should.be.ok
     end
 
-    specify 'only deletes the access token and secret and request token and request secret after the app behind it returns control'
-
-    specify 'deletes the access and request tokens and secrets even after an error'
     specify 'returns a 401 if the access token is not successfully gathered' do
       bad_access_token
       res = mock_callback
@@ -154,8 +153,8 @@ context 'Rack::OAuth' do
       mock_access_token
       
       inner = lambda do |env|
-        access = env['rack.session'][:access_token]
-        secret = env['rack.session'][:access_secret]
+        access = env['rack.auth.oauth.access.token']
+        secret = env['rack.auth.oauth.access.secret']
         both = access.to_s + secret.to_s
         [200,
          {'Content-type' => 'text/plain', 'Content-length' => both.size.to_s},
