@@ -110,6 +110,10 @@ module Rack #:nodoc:
       unless sess[:oauth_request_token] && sess[:oauth_request_secret]
         return missing_request_token_or_secret_error
       end
+
+      unless oauth_verifier = Rack::Request.new(env).params['oauth_verifier']
+        return missing_oauth_verifier
+      end
       # request  = ::OAuth::RequestToken.new consumer, session(env)[:oauth_request_token], session(env)[:oauth_request_secret]
       # access   = request.get_access_token :oauth_verifier => Rack::Request.new(env).params['oauth_verifier']
       # response = consumer.request :get, '/account/verify_credentials.json', access, :scheme => :query_string
@@ -164,6 +168,13 @@ module Rack #:nodoc:
     def missing_request_token_or_secret_error
       msg = "Whoa, the redirect (or link) that sent you here didn't specify " +
         "either a oauth_request_token or oauth_request_secret"
+      [400, {'Content-type' => 'text/plain', 'Content-length' => msg.size.to_s}, [msg]]
+    end
+
+    def missing_oauth_verifier
+      msg = "Ah, the service you tried to talk to is not secure. We're not going " +
+        "any further. (Specifically, it does not implement the oauth_verifier of " +
+        "OAuth 1.0a.)"
       [400, {'Content-type' => 'text/plain', 'Content-length' => msg.size.to_s}, [msg]]
     end
   end

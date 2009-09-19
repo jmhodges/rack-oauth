@@ -64,7 +64,8 @@ context 'Rack::OAuth' do
     # oauth_verifier and other security changes.
     specify 'passes control to the app behind it' do
       res = Rack::MockRequest.new(app).
-        get('/oauth_callback', 'rack.session' => AUTHORIZE_SESSION.dup)
+        get('/oauth_callback?oauth_verifier=gotit',
+            'rack.session' => AUTHORIZE_SESSION.dup)
       res.body.should.equal('foo')
       res.should.be.ok
     end
@@ -76,7 +77,7 @@ context 'Rack::OAuth' do
     specify 'returns a 400 if the oauth_request_token or oauth_request_secret is missing' do
 
       res = Rack::MockRequest.new(app).
-        get('/oauth_callback',
+        get('/oauth_callback?oauth_verifier=gotit',
             'rack.session' => {
               :oauth_request_secret => AUTHORIZE_SESSION[:oauth_request_secret]
             })
@@ -94,7 +95,13 @@ context 'Rack::OAuth' do
       res.status.should.equal 400
     end
 
-    specify 'returns a 400 if the Service Provider did not append the OAuth 1.0a oauth_verifier param to the callback'
+    specify 'returns a 400 if the Service Provider did not append the OAuth 1.0a oauth_verifier param to the callback' do
+      res = Rack::MockRequest.new(app).
+        get('/oauth_callback',
+            'rack.session' => AUTHORIZE_SESSION.dup)
+      res.should.be.a.client_error
+      res.status.should.equal 400
+    end
 
     specify 'includes the oauth_verifier of OAuth 1.0a in the access token request'
     specify 'wtf oauth_callback_accepted seems to be useless'
