@@ -121,8 +121,11 @@ module Rack #:nodoc:
                                            sess[:oauth_request_token],
                                            sess[:oauth_request_secret]
                                            )
-
-      access   = request.get_access_token(:oauth_verifier => oauth_verifier)
+      begin
+        access   = request.get_access_token(:oauth_verifier => oauth_verifier)
+      rescue ::OAuth::Unauthorized
+        return incorrect_oauth_request_information
+      end
 
       sess[:access_token] = access.token
       sess[:access_secret] = access.secret
@@ -177,6 +180,11 @@ module Rack #:nodoc:
         "any further. (Specifically, it does not implement the oauth_verifier of " +
         "OAuth 1.0a.)"
       [400, {'Content-type' => 'text/plain', 'Content-length' => msg.size.to_s}, [msg]]
+    end
+
+    def incorrect_oauth_request_information
+      msg = "Someone's been forgin'!"
+      [401, {'Content-type' => 'text/plain', 'Content-length' => msg.size.to_s}, [msg]]
     end
   end
 

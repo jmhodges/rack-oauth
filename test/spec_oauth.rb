@@ -96,6 +96,16 @@ context 'Rack::OAuth' do
         expects(:get_access_token).returns(token)
     end
 
+    def bad_access_token
+      fakeresp = mock do
+        stubs('code').returns(401)
+        stubs('message').returns("nooooo")
+      end
+
+      OAuth::RequestToken.any_instance.
+        expects(:get_access_token).raises(OAuth::Unauthorized.new(fakeresp))
+    end
+
     specify 'passes control to the app behind it' do
       mock_access_token
       res = mock_callback
@@ -106,7 +116,12 @@ context 'Rack::OAuth' do
     specify 'only deletes the access token and secret and request token and request secret after the app behind it returns control'
 
     specify 'deletes the access and request tokens and secrets even after an error'
-    specify 'returns a 401 if the access token is not successfully gathered'
+    specify 'returns a 401 if the access token is not successfully gathered' do
+      bad_access_token
+      res = mock_callback
+      res.should.be.a.client_error
+      res.status.should.equal(401)
+    end
 
     specify 'returns a 400 if the oauth_request_token or oauth_request_secret is missing' do
       res = mock_callback(:valid_request_secret => false)
