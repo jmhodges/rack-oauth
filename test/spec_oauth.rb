@@ -21,14 +21,16 @@ AUTHORIZE_SESSION = {
 }
 
 def app(hsh={})
-  inner_lint = Rack::Lint.new(lambda { |env|
-                                [200,
-                                 {"Content-type" => "test/plain",
-                                   "Content-length" => "3"
-                                 },
-                                 ["foo"]
-                                ]
-                              })
+  hsh[:inner] ||= lambda { |env|
+    [200,
+     {"Content-type" => "test/plain",
+       "Content-length" => "3"
+     },
+     ["foo"]
+    ]
+  }
+  
+  inner_lint = Rack::Lint.new(hsh.delete(:inner))
   oauth = Rack::OAuth.new(inner_lint, DEFAULT.merge(hsh))
 
   Rack::Lint.new(oauth)
@@ -42,7 +44,7 @@ def mock_callback(opts={})
 
   verifier = ''
   if opts[:valid_verifier]
-    v = Rack::Utils.escape(opts[:verifier]) || 'gotit'
+    v = Rack::Utils.escape(opts[:verifier] || 'gotit')
     verifier = "?oauth_verifier=#{v}"
   end
 
@@ -56,7 +58,7 @@ def mock_callback(opts={})
   end
 
   path = '/oauth_callback' + verifier
-  Rack::MockRequest.new(app).get(path, 'rack.session' => sess)
+  Rack::MockRequest.new(app(:inner => opts[:inner])).get(path, 'rack.session' => sess)
 end
 
 context 'Rack::OAuth' do
@@ -84,10 +86,21 @@ context 'Rack::OAuth' do
   end
 
   context 'on callback' do
+    def mock_access_token
+      token = mock('OAuth::AccessToken') do
+        expects('token').returns('someaccesstoken')
+        expects('secret').returns('someaccesssecret')
+      end
+
+      OAuth::RequestToken.any_instance.
+        expects(:get_access_token).returns(token)
+    end
+
     # See http://oauth.net/core/1.0a and
     # http://wiki.oauth.net/Signed-Callback-URLs for info on
     # oauth_verifier and other security changes.
     specify 'passes control to the app behind it' do
+      mock_access_token
       res = mock_callback
       res.body.should.equal('foo')
       res.should.be.ok
@@ -115,10 +128,35 @@ context 'Rack::OAuth' do
       res.should.be.a.client_error
       res.status.should.equal 400
       res.match /verifier/
+
+      res = mock_callback(:valid_verifier => true, :verifier => '')
+      res.should.be.a.client_error
+      res.status.should.equal 400
+      res.match /verifier/
     end
 
-    specify 'passes oauth_verifier to the the next app'
-    specify 'includes the oauth_verifier of OAuth 1.0a in the access token request'
+    specify 'passes oauth_verifier to the the next app' do
+      mock_access_token
+      
+      inner = lambda do |env|
+        access = env['rack.session'][:access_token]
+        secret = env['rack.session'][:access_secret]
+        both = access.to_s + secret.to_s
+        [200,
+         {'Content-type' => 'text/plain', 'Content-length' => both.size.to_s},
+         [both]
+        ]
+      end
+
+      res = mock_callback(:inner => inner)
+      res.body.should.equal('someaccesstoken' + 'someaccesssecret')
+      res.content_length.should.not.equal(0)
+    end
+
+    specify 'includes the oauth_verifier of OAuth 1.0a in the access token request' do
+      mock_access_token
+      mock_callback
+    end
     specify 'wtf oauth_callback_accepted seems to be useless'
   end
 end

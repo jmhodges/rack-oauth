@@ -111,20 +111,21 @@ module Rack #:nodoc:
         return missing_request_token_or_secret_error
       end
 
-      unless oauth_verifier = Rack::Request.new(env).params['oauth_verifier']
+      oauth_verifier = Rack::Request.new(env).params['oauth_verifier']
+      
+      unless oauth_verifier && !oauth_verifier.empty?
         return missing_oauth_verifier
       end
-      # request  = ::OAuth::RequestToken.new consumer, session(env)[:oauth_request_token], session(env)[:oauth_request_secret]
-      # access   = request.get_access_token :oauth_verifier => Rack::Request.new(env).params['oauth_verifier']
-      # response = consumer.request :get, '/account/verify_credentials.json', access, :scheme => :query_string
 
-      # # clean up session variables we used so we're not polluting the session
-      # session(env).delete :oauth_request_token
-      # session(env).delete :oauth_request_secret
+      request  = ::OAuth::RequestToken.new(consumer,
+                                           sess[:oauth_request_token],
+                                           sess[:oauth_request_secret]
+                                           )
 
-      # # put the user information received (json -> ruby) in the session
-      # session(env)[session_key] = json_parser.call response.body if response
-      
+      access   = request.get_access_token(:oauth_verifier => oauth_verifier)
+
+      sess[:access_token] = access.token
+      sess[:access_secret] = access.secret
       @app.call(env)
     end
 
