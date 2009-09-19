@@ -34,6 +34,25 @@ def app(hsh={})
   Rack::Lint.new(oauth)
 end
 
+def mock_callback(opts={})
+  opts = {:verifier => 'gotit',
+    :request_token => AUTHORIZE_SESSION[:oauth_request_token],
+    :request_secret => AUTHORIZE_SESSION[:oauth_request_secret]
+  }.merge(opts)
+
+  verifier = ''
+  if opts[:verifier]
+    esc = Rack::Utils.escape(opts[:verifier])
+    verifier = "?oauth_verifier=#{esc}"
+  end
+
+  path = '/oauth_callback' + verifier
+  sess = {}
+  sess[:oauth_request_token] = opts[:request_token] if opts[:request_token]
+  sess[:oauth_request_secret] = opts[:request_secret] if opts[:request_secret]
+  Rack::MockRequest.new(app).get(path, 'rack.session' => sess)
+end
+
 context 'Rack::OAuth' do
 
   context 'on login' do
@@ -63,9 +82,7 @@ context 'Rack::OAuth' do
     # http://wiki.oauth.net/Signed-Callback-URLs for info on
     # oauth_verifier and other security changes.
     specify 'passes control to the app behind it' do
-      res = Rack::MockRequest.new(app).
-        get('/oauth_callback?oauth_verifier=gotit',
-            'rack.session' => AUTHORIZE_SESSION.dup)
+      res = mock_callback
       res.body.should.equal('foo')
       res.should.be.ok
     end
@@ -76,33 +93,24 @@ context 'Rack::OAuth' do
     
     specify 'returns a 400 if the oauth_request_token or oauth_request_secret is missing' do
 
-      res = Rack::MockRequest.new(app).
-        get('/oauth_callback?oauth_verifier=gotit',
-            'rack.session' => {
-              :oauth_request_secret => AUTHORIZE_SESSION[:oauth_request_secret]
-            })
+      res = mock_callback(:request_secret => nil)
 
       res.should.be.a.client_error
       res.status.should.equal 400
 
-      res = Rack::MockRequest.new(app).
-        get('/oauth_callback',
-            'rack.session' => {
-              :oauth_request_token => AUTHORIZE_SESSION[:oauth_request_token]
-            })
+      res = mock_callback(:request_token => nil)
 
       res.should.be.a.client_error
       res.status.should.equal 400
     end
 
     specify 'returns a 400 if the Service Provider did not append the OAuth 1.0a oauth_verifier param to the callback' do
-      res = Rack::MockRequest.new(app).
-        get('/oauth_callback',
-            'rack.session' => AUTHORIZE_SESSION.dup)
+      res = mock_callback(:verifier => nil)
       res.should.be.a.client_error
       res.status.should.equal 400
     end
 
+    specify 'passes oauth_verifier to the the next app'
     specify 'includes the oauth_verifier of OAuth 1.0a in the access token request'
     specify 'wtf oauth_callback_accepted seems to be useless'
   end
