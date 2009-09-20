@@ -110,12 +110,12 @@ module Rack #:nodoc:
         return missing_oauth_verifier
       end
 
-      request  = ::OAuth::RequestToken.new(consumer,
+      request = ::OAuth::RequestToken.new(consumer,
                                            sess[:oauth_request_token],
                                            sess[:oauth_request_secret]
                                            )
       begin
-        access   = request.get_access_token(:oauth_verifier => oauth_verifier)
+        access = request.get_access_token(:oauth_verifier => oauth_verifier)
       rescue ::OAuth::Unauthorized
         return incorrect_oauth_request_information
       end
