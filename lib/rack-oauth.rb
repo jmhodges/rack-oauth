@@ -14,7 +14,6 @@ module Rack #:nodoc:
       :login_path    => '/oauth_login',
       :callback_path => '/oauth_callback',
       :redirect_to   => '/oauth_complete',
-      :session_key   => 'oauth_user',
     }
 
     # [internal] the URL that should initiate OAuth and redirect to the OAuth provider's login page
@@ -31,9 +30,6 @@ module Rack #:nodoc:
     attr_accessor :redirect_to
     alias redirect  redirect_to
     alias redirect= redirect_to=
-
-    # the name of the Session key to use to store user account information (if OAuth completed OK)
-    attr_accessor :session_key
 
     # [required] Your OAuth consumer key
     attr_accessor :consumer_key
