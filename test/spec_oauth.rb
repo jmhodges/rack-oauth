@@ -9,7 +9,7 @@ require 'rack/session/cookie'
 DEFAULT = {
   :consumer_key => 'key',
   :consumer_secret => 'secret',
-  :consumer_site => 'http://term.ie',
+  :provider_site => 'http://term.ie',
   :request_token_path => "/oauth/example/request_token.php",
   :access_token_path => "/oauth/example/access_token.php",
   :authorize_path => "/oauth/example/authorize.php"

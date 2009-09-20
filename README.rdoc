@@ -27,9 +27,9 @@ This will use all of the defaults:
 
 There are a number of defaults that can be overridden.  Defaults can be viewed at http://code.remi.org/rack-oauth/classes/Rack/OAuth.html
 
-  use Rack::OAuth :key          => 'abc', 
-                  :secret       => '123', 
-                  :site         => 'http://twitter.com',
+  use Rack::OAuth :consumer_key          => 'abc',
+                  :consumer_secret       => '123',
+                  :provider_site         => 'http://twitter.com',
                   :login        => '/path_that_will_goto_oauth_providers_login',
                   :redirect     => '/path_to_redirect_to_after_oauth_authorization',
                   :session_key  => 'name_of_session_variable_to_store_oauth_user_info_in',

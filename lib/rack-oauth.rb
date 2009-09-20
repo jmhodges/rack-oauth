@@ -33,18 +33,12 @@ module Rack #:nodoc:
 
     # [required] Your OAuth consumer key
     attr_accessor :consumer_key
-    alias key  consumer_key
-    alias key= consumer_key=
 
     # [required] Your OAuth consumer secret
     attr_accessor :consumer_secret
-    alias secret  consumer_secret
-    alias secret= consumer_secret=
 
     # [required] The site you want to request OAuth for, eg. 'http://twitter.com'
-    attr_accessor :consumer_site
-    alias site  consumer_site
-    alias site= consumer_site=
+    attr_accessor :provider_site
 
     # The path OAuth should use to get a request token from the OAuth
     # provider. OAuth will default to +/oauth/request_token+ without it.
@@ -124,7 +118,7 @@ module Rack #:nodoc:
     protected
 
     def consumer
-      options = {:site => consumer_site}
+      options = {:site => provider_site}
       options[:request_token_path] = request_token_path if request_token_path
       @consumer ||= ::OAuth::Consumer.new consumer_key, consumer_secret, options
     end
@@ -133,7 +127,7 @@ module Rack #:nodoc:
       @errors = []
       @errors << ":consumer_key option is required"    unless consumer_key
       @errors << ":consumer_secret option is required" unless consumer_secret
-      @errors << ":consumer_site option is required"   unless consumer_site
+      @errors << ":provider_site option is required"   unless provider_site
       @errors.empty?
     end
 
